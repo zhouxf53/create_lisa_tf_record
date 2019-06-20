@@ -18,8 +18,9 @@
 
   Example usage:
     python create_lisa_tf_record.py \
-        --data_dir=/home/user/lisa \
-        --output_path=/home/user/lisa.record
+          --data_dir=../signDatabasePublicFramesOnly \
+          --output_path=./data \
+          --label_map_path=./lisa_label_map.pbtxt
 """
 
 from __future__ import absolute_import
@@ -162,7 +163,7 @@ def prepare_example(image_path, annotations, label_map_dict):
     return example
 
 
-def main():
+def main(_):
     convert_lisa_to_tfrecords(
         data_dir=FLAGS.data_dir,
         output_path=FLAGS.output_path,
