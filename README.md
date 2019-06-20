@@ -17,16 +17,16 @@
   
 Example usage
 ```asciidoc
-    python create_lisa_tf_record.py \
-          --data_dir=../signDatabasePublicFramesOnly \
-          --output_path=./data \
-          --label_map_path=./lisa_label_map.pbtxt
+python create_lisa_tf_record.py \
+       --data_dir=../signDatabasePublicFramesOnly \
+       --output_path=./data \
+       --label_map_path=./lisa_label_map.pbtxt
 ```
 To validate if the conversion was successful, visualize the images by using `visualize_tf_record.py` as
 ```
 python visualize_tf_record.py PATH_TO_TF_RECORD PATH_TO_LABEL_MAP
 ```
 Example usage
-```
+```asciidoc
 python visualize_tf_record.py "./data/LISA_train.tfrecord" "./lisa_label_map.pbtxt"
 ```
