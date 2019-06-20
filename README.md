@@ -22,7 +22,7 @@ Example usage
           --output_path=./data \
           --label_map_path=./lisa_label_map.pbtxt
 ```
-To validate the successfully conversion, visualize the images by using `visualize_tf_record.py` as
+To validate if the conversion was successful, visualize the images by using `visualize_tf_record.py` as
 ```
 python visualize_tf_record.py PATH_TO_TF_RECORD PATH_TO_LABEL_MAP
 ```
