@@ -1,4 +1,4 @@
-### Converts lisa detection dataset to TFRecords with a standard format allowing to use this dataset to train object detectors.
+### Converts lisa detection dataset to TFRecords with a standard format allowing to use this dataset to train tensorflow object detectors.
   Converts lisa detection dataset to TFRecords with a standard format allowing
   to use this dataset to train object detectors. The raw dataset can be
   downloaded from:
