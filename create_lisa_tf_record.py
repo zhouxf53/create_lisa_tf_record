@@ -1,3 +1,27 @@
+""" Convert raw lisa detection dataset to TFRecord for object_detection.
+
+  Converts lisa detection dataset to TFRecords with a standard format allowing
+  to use this dataset to train object detectors. The raw dataset can be
+  downloaded from:
+  http://cvrr.ucsd.edu/LISA/lisa-traffic-sign-dataset.html
+
+  lisa detection dataset contains 7855 training images. Using this code with
+  the default settings will set aside 500 images randomly with as a validation set.
+  This can be altered using the flags, see details below.
+
+  Tensorflow object detection API is required to be installed, check:
+  https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md
+
+  Most of the credits of this script go to:
+  https://github.com/tensorflow/models/blob/master/research/object_detection/dataset_tools/create_kitti_tf_record.py
+  https://github.com/cooliscool/LISA-on-SSD-mobilenet/blob/master/create_lisa_tfrecords.py
+
+  Example usage:
+    python create_lisa_tf_record.py \
+        --data_dir=/home/user/lisa \
+        --output_path=/home/user/lisa.record
+"""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -6,31 +30,47 @@ import hashlib
 import io
 import os
 import csv
-import numpy as np
 import PIL.Image as pil
 import tensorflow as tf
 import random
+
 from object_detection.utils import dataset_util
 from object_detection.utils import label_map_util
-from object_detection.utils.np_box_ops import iou
+
+tf.app.flags.DEFINE_string('data_dir', '', 'Location of root directory for the '
+                                           'data. Folder structure is assumed to be named as:'
+                                           'signDatabasePublicFramesOnly'
+                                           '<data_dir>/allAnnotations.csv,'
+                                           '<data_dir>/aiua120214-0/'
+                                           '...')
+tf.app.flags.DEFINE_string('output_path', '', 'Path to which TFRecord files'
+                                              'will be written. The TFRecord with the training set'
+                                              'will be located at: <output_path>/LISA_train.tfrecord.'
+                                              'And the TFRecord with the validation set will be'
+                                              'located at: <output_path>/LISA__val.tfrecord')
+tf.app.flags.DEFINE_string('label_map_path', 'data/kitti_label_map.pbtxt',
+                           'Path to label map proto.')
+tf.app.flags.DEFINE_integer('validation_set_size', '500', 'Number of images to'
+                                                          'be used as a validation set.')
+FLAGS = tf.app.flags.FLAGS
 
 
 def convert_lisa_to_tfrecords(data_dir, output_path, label_map_path, validation_set_size):
     """
-    
-    :param data_dir:
-    :param output_path:
-    :param label_map_path:
-    :param validation_set_size:
-    :return:
+    Convert the LISA detection dataset to TFRecords.
+    :param data_dir: directory with the name "signDatabasePublicFramesOnly"
+    :param output_path: suggest ./data
+    :param label_map_path: full path to the label_map
+    :param validation_set_size: default of 500 with flag settings
+    :return: N/A
     """
     label_map_dict = label_map_util.get_label_map_dict(label_map_path)
     train_count = 0
     val_count = 0
 
     annotations_dir = os.path.join(data_dir, 'allAnnotations.csv')
-    train_writer = tf.python_io.TFRecordWriter(os.path.join(output_path, 'lisa_train.tfrecord'))
-    val_writer = tf.python_io.TFRecordWriter(os.path.join(output_path, 'lisa_val.tfrecord'))
+    train_writer = tf.python_io.TFRecordWriter(os.path.join(output_path, 'LISA_train.tfrecord'))
+    val_writer = tf.python_io.TFRecordWriter(os.path.join(output_path, 'LISA_val.tfrecord'))
 
     # parse annotation csv file
     with open(annotations_dir) as csvFile:
@@ -61,11 +101,11 @@ def convert_lisa_to_tfrecords(data_dir, output_path, label_map_path, validation_
 
 def prepare_example(image_path, annotations, label_map_dict):
     """
-
-    :param image_path:
-    :param annotations:
-    :param label_map_dict:
-    :return:
+    Converts a dictionary with annotations for an image to tf.Example proto.
+    :param image_path: full path to the image
+    :param annotations: a list object obtained by reading the annotation csv file
+    :param label_map_dict: a map from string label names to integer ids.
+    :return: example: The converted tf.Example.
     """
     print("encoding %s" % image_path)
     with tf.gfile.GFile(image_path, 'rb') as fid:
@@ -107,7 +147,7 @@ def prepare_example(image_path, annotations, label_map_dict):
         'image/width': dataset_util.int64_feature(width),
         'image/filename': dataset_util.bytes_feature(img_filename.encode('utf8')),
         'image/source_id': dataset_util.bytes_feature(img_filename.encode('utf8')),
-        'image/key/sha256': dataset_util.bytes_feature(img_filename.encode('utf8')),
+        'image/key/sha256': dataset_util.bytes_feature(key.encode('utf8')),
         'image/encoded': dataset_util.bytes_feature(encoded_png),
         'image/format': dataset_util.bytes_feature('png'.encode('utf8')),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmin),
@@ -123,10 +163,13 @@ def prepare_example(image_path, annotations, label_map_dict):
 
 
 def main():
-    convert_lisa_to_tfrecords(r"D:\DNN_project\traffic_signs_related\signDatabasePublicFramesOnly", r"./data",
-                              "./lisa_label_map.pbtxt",
-                              500)
+    convert_lisa_to_tfrecords(
+        data_dir=FLAGS.data_dir,
+        output_path=FLAGS.output_path,
+        label_map_path=FLAGS.label_map_path,
+        validation_set_size=FLAGS.validation_set_size
+    )
 
 
 if __name__ == '__main__':
-    main()
+    tf.app.run()
